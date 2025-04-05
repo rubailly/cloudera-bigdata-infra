@@ -4,14 +4,14 @@
   become: yes
   tasks:
     - name: Create HDFS directories for tenants
-      command: >
-        kinit -kt /var/run/cloudera-scm-agent/process/*/hdfs.keytab hdfs/{{ ansible_hostname }}@HADOOP.COM && 
-        hdfs dfs -mkdir -p /telecoms/mtn-rwanda &&
-        hdfs dfs -mkdir -p /telecoms/mtn-ghana &&
-        hdfs dfs -mkdir -p /telecoms/airtel-uganda &&
-        hdfs dfs -chmod 770 /telecoms/mtn-rwanda &&
-        hdfs dfs -chmod 770 /telecoms/mtn-ghana &&
-        hdfs dfs -chmod 770 /telecoms/airtel-uganda
+      shell: |
+        export PATH=$PATH:/opt/cloudera/parcels/CDH/bin
+        sudo -u hdfs hdfs dfs -mkdir -p /telecoms/mtn-rwanda
+        sudo -u hdfs hdfs dfs -mkdir -p /telecoms/mtn-ghana
+        sudo -u hdfs hdfs dfs -mkdir -p /telecoms/airtel-uganda
+        sudo -u hdfs hdfs dfs -chmod 770 /telecoms/mtn-rwanda
+        sudo -u hdfs hdfs dfs -chmod 770 /telecoms/mtn-ghana
+        sudo -u hdfs hdfs dfs -chmod 770 /telecoms/airtel-uganda
       ignore_errors: yes
       
     - name: Copy YARN queue configuration

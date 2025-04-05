@@ -45,6 +45,14 @@
         value: '1'
         state: present
         
+    - name: Ensure hostname resolution works
+      lineinfile:
+        path: /etc/hosts
+        line: "{{ hostvars[item]['ansible_default_ipv4']['address'] }} {{ hostvars[item]['ansible_hostname'] }}"
+        state: present
+      with_items: "{{ groups['all'] }}"
+      when: hostvars[item]['ansible_default_ipv4'] is defined
+        
     - name: Install required packages
       apt:
         name:
@@ -56,3 +64,16 @@
           - unzip
         state: present
       when: ansible_os_family == "Debian"
+      
+    - name: Create data directories for HDFS
+      file:
+        path: "{{ item }}"
+        state: directory
+        mode: '0755'
+        owner: root
+        group: root
+      with_items:
+        - /data
+        - /data/dfs
+        - /data/dfs/nn
+        - /data/dfs/dn

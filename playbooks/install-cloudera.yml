@@ -45,7 +45,7 @@
         enabled: yes
 
     - name: Secure MariaDB installation
-      command: mysql -e "UPDATE mysql.user SET Password=PASSWORD('{{ cm_admin_password }}') WHERE User='root'; FLUSH PRIVILEGES;"
+      command: mysql -e "ALTER USER 'root'@'localhost' IDENTIFIED BY '{{ cm_admin_password }}'; FLUSH PRIVILEGES;"
       ignore_errors: yes
 
     - name: Create databases for Cloudera services
@@ -60,15 +60,24 @@
         CREATE DATABASE IF NOT EXISTS nav DEFAULT CHARACTER SET utf8 DEFAULT COLLATE utf8_general_ci;
         CREATE DATABASE IF NOT EXISTS navms DEFAULT CHARACTER SET utf8 DEFAULT COLLATE utf8_general_ci;
         CREATE DATABASE IF NOT EXISTS oozie DEFAULT CHARACTER SET utf8 DEFAULT COLLATE utf8_general_ci;
-        GRANT ALL ON scm.* TO 'scm'@'%' IDENTIFIED BY 'scm';
-        GRANT ALL ON amon.* TO 'amon'@'%' IDENTIFIED BY 'amon';
-        GRANT ALL ON rman.* TO 'rman'@'%' IDENTIFIED BY 'rman';
-        GRANT ALL ON hue.* TO 'hue'@'%' IDENTIFIED BY 'hue';
-        GRANT ALL ON metastore.* TO 'hive'@'%' IDENTIFIED BY 'hive';
-        GRANT ALL ON sentry.* TO 'sentry'@'%' IDENTIFIED BY 'sentry';
-        GRANT ALL ON nav.* TO 'nav'@'%' IDENTIFIED BY 'nav';
-        GRANT ALL ON navms.* TO 'navms'@'%' IDENTIFIED BY 'navms';
-        GRANT ALL ON oozie.* TO 'oozie'@'%' IDENTIFIED BY 'oozie';
+        CREATE USER IF NOT EXISTS 'scm'@'%' IDENTIFIED BY 'scm';
+        CREATE USER IF NOT EXISTS 'amon'@'%' IDENTIFIED BY 'amon';
+        CREATE USER IF NOT EXISTS 'rman'@'%' IDENTIFIED BY 'rman';
+        CREATE USER IF NOT EXISTS 'hue'@'%' IDENTIFIED BY 'hue';
+        CREATE USER IF NOT EXISTS 'hive'@'%' IDENTIFIED BY 'hive';
+        CREATE USER IF NOT EXISTS 'sentry'@'%' IDENTIFIED BY 'sentry';
+        CREATE USER IF NOT EXISTS 'nav'@'%' IDENTIFIED BY 'nav';
+        CREATE USER IF NOT EXISTS 'navms'@'%' IDENTIFIED BY 'navms';
+        CREATE USER IF NOT EXISTS 'oozie'@'%' IDENTIFIED BY 'oozie';
+        GRANT ALL ON scm.* TO 'scm'@'%';
+        GRANT ALL ON amon.* TO 'amon'@'%';
+        GRANT ALL ON rman.* TO 'rman'@'%';
+        GRANT ALL ON hue.* TO 'hue'@'%';
+        GRANT ALL ON metastore.* TO 'hive'@'%';
+        GRANT ALL ON sentry.* TO 'sentry'@'%';
+        GRANT ALL ON nav.* TO 'nav'@'%';
+        GRANT ALL ON navms.* TO 'navms'@'%';
+        GRANT ALL ON oozie.* TO 'oozie'@'%';
         FLUSH PRIVILEGES;"
       ignore_errors: yes
 
