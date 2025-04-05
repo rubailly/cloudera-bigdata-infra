@@ -1,0 +1,248 @@
+✅ Developer Deployment Guide (Precise Version)
+🎯 Objective
+This repository automates the deployment of a secure, multi-tenant Cloudera Big Data platform for three telecom clients:
+
+MTN Rwanda
+
+MTN Ghana
+
+Airtel Uganda
+
+The cluster includes:
+
+Cloudera Manager
+
+HDFS, YARN, Hive, Spark
+
+Multi-tenant HDFS directory structure
+
+Isolated YARN queues per client
+
+Secure access policies using Apache Ranger
+
+🖥️ Server Infrastructure
+You need five Linux servers (Ubuntu 20.04 recommended). Assign static IPs like this:
+
+Server	Role	IP Address
+1	Cloudera Manager + Master	10.0.0.10
+2	Worker Node 1	10.0.0.11
+3	Worker Node 2	10.0.0.12
+4	Worker Node 3	10.0.0.13
+5	Worker Node 4	10.0.0.14
+All servers must be reachable by SSH and have at least:
+
+8 vCPUs
+
+16 GB RAM
+
+100+ GB SSD
+
+🗂️ Project Structure
+pgsql
+Copy
+Edit
+cloudera-bigdata-infra/
+│
+├── inventory/
+│   ├── hosts.ini                 ← Server IPs grouped by role
+│   └── group_vars/
+│       └── all.yml              ← Shared config: cluster name, SSH key path, credentials
+│
+├── playbooks/
+│   ├── setup-prereqs.yml        ← Java, SSH, hostname, hosts
+│   ├── install-cloudera.yml     ← Install Cloudera Manager + agents
+│   ├── deploy-services.yml      ← Install HDFS, YARN, Hive, Spark
+│   ├── setup-multitenancy.yml   ← Create tenants, queues, directories, Ranger policies
+│   └── secure-cluster.yml       ← Optional: enable Kerberos + TLS
+│
+├── config/
+│   ├── cluster-definition.json  ← API-based definition of services to deploy
+│   ├── yarn-queues.json         ← MTN & Airtel queue structure
+│   └── ranger-policies.json     ← Fine-grained access control
+│
+├── scripts/
+│   ├── generate-ssh-keys.sh     ← SSH key automation
+│   └── distribute-hosts.sh      ← Hostname + /etc/hosts setup
+│
+├── .env.sample                  ← Template for credentials/secrets
+└── README.md                    ← This guide
+🔐 Credentials & Configs
+Edit .env.sample, then rename to .env:
+
+bash
+Copy
+Edit
+CLUSTER_NAME=TelecomCluster
+CM_ADMIN_USER=admin
+CM_ADMIN_PASSWORD=admin123
+SSH_PRIVATE_KEY=~/.ssh/cloudera_id_rsa
+SSH_USER=ubuntu
+Edit inventory/hosts.ini:
+
+ini
+Copy
+Edit
+[cloudera_manager]
+10.0.0.10
+
+[master]
+10.0.0.10
+
+[workers]
+10.0.0.11
+10.0.0.12
+10.0.0.13
+10.0.0.14
+
+[all:vars]
+ansible_user=ubuntu
+ansible_ssh_private_key_file=~/.ssh/cloudera_id_rsa
+⚙️ Step-by-Step Deployment
+1. 🔧 Prepare SSH
+From your local machine or jump host:
+
+bash
+Copy
+Edit
+bash scripts/generate-ssh-keys.sh
+Then use:
+
+bash
+Copy
+Edit
+ssh-copy-id -i ~/.ssh/cloudera_id_rsa.pub ubuntu@10.0.0.10
+# Repeat for 10.0.0.11 to 10.0.0.14
+2. 🛠️ Run Prerequisites Setup
+bash
+Copy
+Edit
+ansible-playbook -i inventory/hosts.ini playbooks/setup-prereqs.yml
+Installs Java
+
+Configures hostnames
+
+Syncs /etc/hosts across nodes
+
+Disables swap
+
+3. 📦 Install Cloudera Manager + Agents
+bash
+Copy
+Edit
+ansible-playbook -i inventory/hosts.ini playbooks/install-cloudera.yml
+Installs Cloudera Manager on 10.0.0.10
+
+Installs agents on all nodes
+
+Access the UI at:
+http://10.0.0.10:7180
+Login with admin / admin123
+
+4. 🧠 Deploy Hadoop Ecosystem
+bash
+Copy
+Edit
+ansible-playbook -i inventory/hosts.ini playbooks/deploy-services.yml
+Deploys:
+
+HDFS (with 3x replication)
+
+YARN (ResourceManager on 10.0.0.10)
+
+Hive + Metastore
+
+Spark
+
+Impala (optional)
+
+5. 🏢 Configure Multi-Tenancy
+bash
+Copy
+Edit
+ansible-playbook -i inventory/hosts.ini playbooks/setup-multitenancy.yml
+Creates:
+
+HDFS directories:
+
+bash
+Copy
+Edit
+/telecoms/mtn-rwanda/
+/telecoms/mtn-ghana/
+/telecoms/airtel-uganda/
+YARN Queues:
+
+json
+Copy
+Edit
+{
+  "root": {
+    "children": {
+      "mtn": {
+        "children": {
+          "rwanda": { "capacity": "25" },
+          "ghana": { "capacity": "25" }
+        }
+      },
+      "airtel": {
+        "children": {
+          "uganda": { "capacity": "50" }
+        }
+      }
+    }
+  }
+}
+Ranger policies to restrict users to their folders/queues
+
+✅ End Result
+Once all playbooks complete, you’ll have:
+
+Cloudera Manager dashboard (http://10.0.0.10:7180)
+
+HDFS and Hive configured
+
+Spark ready for jobs
+
+MTN and Airtel each have:
+
+Their own queue for YARN jobs
+
+Private HDFS directory
+
+Restricted access using Apache Ranger
+
+You can now run:
+
+Hive queries for CDRs
+
+Spark analytics per tenant
+
+Monitoring through Cloudera Manager
+
+🧪 (Coming Soon) Sample Workflows
+In /samples/, we’ll include:
+
+CDR data for 3 telecoms
+
+Hive DDL scripts to ingest
+
+Spark scripts to compute total calls per tower
+
+🛠 Developer Tasks Checklist
+If you’re the assigned developer:
+
+ Clone the repo
+
+ Fill in .env and hosts.ini
+
+ Run setup-prereqs.yml
+
+ Run install-cloudera.yml
+
+ Run deploy-services.yml
+
+ Run setup-multitenancy.yml
+
+ Verify via Cloudera Manager dashboard
+
+ Document anything you change for reuse
