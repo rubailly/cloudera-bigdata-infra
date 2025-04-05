@@ -22,9 +22,15 @@ master_hostname: $MASTER_HOSTNAME
 worker1_hostname: $WORKER1_HOSTNAME
 worker2_hostname: $WORKER2_HOSTNAME
 
-# SSH configuration
-ssh_user: $SSH_USER
-ssh_password: $SSH_PASSWORD
+# SSH configuration - Master node
+master_ssh_user: $MASTER_SSH_USER
+master_ssh_password: $MASTER_SSH_PASSWORD
+
+# SSH configuration - Worker nodes
+worker1_ssh_user: $WORKER1_SSH_USER
+worker1_ssh_password: $WORKER1_SSH_PASSWORD
+worker2_ssh_user: $WORKER2_SSH_USER
+worker2_ssh_password: $WORKER2_SSH_PASSWORD
 EOF
 
 # Generate the inventory file
@@ -34,18 +40,16 @@ cat > inventory/hosts.ini << EOF
 # ./scripts/configure-servers.sh
 
 [cloudera_manager]
-$MASTER_IP
+$MASTER_IP ansible_user=$MASTER_SSH_USER ansible_ssh_pass=$MASTER_SSH_PASSWORD
 
 [master]
-$MASTER_IP
+$MASTER_IP ansible_user=$MASTER_SSH_USER ansible_ssh_pass=$MASTER_SSH_PASSWORD
 
 [workers]
-$WORKER1_IP
-$WORKER2_IP
+$WORKER1_IP ansible_user=$WORKER1_SSH_USER ansible_ssh_pass=$WORKER1_SSH_PASSWORD
+$WORKER2_IP ansible_user=$WORKER2_SSH_USER ansible_ssh_pass=$WORKER2_SSH_PASSWORD
 
 [all:vars]
-ansible_user=$SSH_USER
-ansible_ssh_pass=$SSH_PASSWORD
 ansible_become=yes
 ansible_become_method=sudo
 ansible_become_user=root

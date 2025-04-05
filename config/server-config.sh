@@ -11,6 +11,14 @@ MASTER_HOSTNAME="cm-master"
 WORKER1_HOSTNAME="worker1"
 WORKER2_HOSTNAME="worker2"
 
-# SSH configuration
-SSH_USER="admin@Log11c"
-SSH_PASSWORD="aetrade123"
+# SSH configuration - Master node
+MASTER_SSH_USER="admin@Log11c"
+MASTER_SSH_PASSWORD="aetrade123"
+
+# SSH configuration - Worker1 node
+WORKER1_SSH_USER="admin@Log11c"
+WORKER1_SSH_PASSWORD="aetrade123"
+
+# SSH configuration - Worker2 node
+WORKER2_SSH_USER="admin@Log11c"
+WORKER2_SSH_PASSWORD="aetrade123"

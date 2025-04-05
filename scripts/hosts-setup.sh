@@ -3,11 +3,20 @@
 # Source the configuration file
 source config/server-config.sh
 
-# Function to run SSH commands with password
-run_ssh_command() {
-    local server=$1
-    local command=$2
-    sshpass -p "$SSH_PASSWORD" ssh -o StrictHostKeyChecking=no $SSH_USER@$server "$command"
+# Function to run SSH commands with password for specific servers
+run_master_ssh_command() {
+    local command=$1
+    sshpass -p "$MASTER_SSH_PASSWORD" ssh -o StrictHostKeyChecking=no $MASTER_SSH_USER@$MASTER_IP "$command"
+}
+
+run_worker1_ssh_command() {
+    local command=$1
+    sshpass -p "$WORKER1_SSH_PASSWORD" ssh -o StrictHostKeyChecking=no $WORKER1_SSH_USER@$WORKER1_IP "$command"
+}
+
+run_worker2_ssh_command() {
+    local command=$1
+    sshpass -p "$WORKER2_SSH_PASSWORD" ssh -o StrictHostKeyChecking=no $WORKER2_SSH_USER@$WORKER2_IP "$command"
 }
 
 # Check if sshpass is installed
@@ -18,20 +27,36 @@ fi
 
 # Set hostnames
 echo "Setting hostnames..."
-run_ssh_command $MASTER_IP "hostnamectl set-hostname $MASTER_HOSTNAME"
-run_ssh_command $WORKER1_IP "hostnamectl set-hostname $WORKER1_HOSTNAME"
-run_ssh_command $WORKER2_IP "hostnamectl set-hostname $WORKER2_HOSTNAME"
+run_master_ssh_command "hostnamectl set-hostname $MASTER_HOSTNAME"
+run_worker1_ssh_command "hostnamectl set-hostname $WORKER1_HOSTNAME"
+run_worker2_ssh_command "hostnamectl set-hostname $WORKER2_HOSTNAME"
 
-# Update /etc/hosts on all servers
-echo "Updating /etc/hosts on all servers..."
-for server in $MASTER_IP $WORKER1_IP $WORKER2_IP; do
-  run_ssh_command $server "cat > /etc/hosts << EOF
+# Update /etc/hosts on master server
+echo "Updating /etc/hosts on master server..."
+run_master_ssh_command "cat > /etc/hosts << EOF
 127.0.0.1 localhost
 $MASTER_IP $MASTER_HOSTNAME
 $WORKER1_IP $WORKER1_HOSTNAME
 $WORKER2_IP $WORKER2_HOSTNAME
 EOF"
-done
+
+# Update /etc/hosts on worker1 server
+echo "Updating /etc/hosts on worker1 server..."
+run_worker1_ssh_command "cat > /etc/hosts << EOF
+127.0.0.1 localhost
+$MASTER_IP $MASTER_HOSTNAME
+$WORKER1_IP $WORKER1_HOSTNAME
+$WORKER2_IP $WORKER2_HOSTNAME
+EOF"
+
+# Update /etc/hosts on worker2 server
+echo "Updating /etc/hosts on worker2 server..."
+run_worker2_ssh_command "cat > /etc/hosts << EOF
+127.0.0.1 localhost
+$MASTER_IP $MASTER_HOSTNAME
+$WORKER1_IP $WORKER1_HOSTNAME
+$WORKER2_IP $WORKER2_HOSTNAME
+EOF"
 
 echo "Hostname setup completed successfully!"
 echo "Master node: $MASTER_HOSTNAME ($MASTER_IP)"

@@ -3,33 +3,48 @@
 # Source the configuration file
 source config/server-config.sh
 
-# Function to run SSH commands with password
-run_ssh_command() {
-    local server=$1
-    local command=$2
-    sshpass -p "$SSH_PASSWORD" ssh -o StrictHostKeyChecking=no -o ConnectTimeout=5 $SSH_USER@$server "$command"
+# Functions to run SSH commands with password for specific servers
+run_master_ssh_command() {
+    local command=$1
+    sshpass -p "$MASTER_SSH_PASSWORD" ssh -o StrictHostKeyChecking=no -o ConnectTimeout=5 $MASTER_SSH_USER@$MASTER_IP "$command"
+}
+
+run_worker1_ssh_command() {
+    local command=$1
+    sshpass -p "$WORKER1_SSH_PASSWORD" ssh -o StrictHostKeyChecking=no -o ConnectTimeout=5 $WORKER1_SSH_USER@$WORKER1_IP "$command"
+}
+
+run_worker2_ssh_command() {
+    local command=$1
+    sshpass -p "$WORKER2_SSH_PASSWORD" ssh -o StrictHostKeyChecking=no -o ConnectTimeout=5 $WORKER2_SSH_USER@$WORKER2_IP "$command"
 }
 
 echo "=== Testing Cloudera Deployment ==="
 echo "1. Testing SSH connectivity to all nodes..."
 
-for server in $MASTER_IP $WORKER1_IP $WORKER2_IP; do
-  echo -n "  - Testing SSH to $server: "
-  run_ssh_command $server "echo OK" || { echo "FAILED"; exit 1; }
-done
+echo -n "  - Testing SSH to $MASTER_IP: "
+run_master_ssh_command "echo OK" || { echo "FAILED"; exit 1; }
+
+echo -n "  - Testing SSH to $WORKER1_IP: "
+run_worker1_ssh_command "echo OK" || { echo "FAILED"; exit 1; }
+
+echo -n "  - Testing SSH to $WORKER2_IP: "
+run_worker2_ssh_command "echo OK" || { echo "FAILED"; exit 1; }
 
 echo "2. Testing hostname resolution..."
-for server in $MASTER_IP $WORKER1_IP $WORKER2_IP; do
-  echo -n "  - Testing hostname resolution on $server: "
-  run_ssh_command $server "grep -q $MASTER_HOSTNAME /etc/hosts && grep -q $WORKER1_HOSTNAME /etc/hosts && grep -q $WORKER2_HOSTNAME /etc/hosts && echo OK" || { echo "FAILED"; exit 1; }
-done
+
+echo -n "  - Testing hostname resolution on $MASTER_IP: "
+run_master_ssh_command "grep -q $MASTER_HOSTNAME /etc/hosts && grep -q $WORKER1_HOSTNAME /etc/hosts && grep -q $WORKER2_HOSTNAME /etc/hosts && echo OK" || { echo "FAILED"; exit 1; }
+
+echo -n "  - Testing hostname resolution on $WORKER1_IP: "
+run_worker1_ssh_command "grep -q $MASTER_HOSTNAME /etc/hosts && grep -q $WORKER1_HOSTNAME /etc/hosts && grep -q $WORKER2_HOSTNAME /etc/hosts && echo OK" || { echo "FAILED"; exit 1; }
+
+echo -n "  - Testing hostname resolution on $WORKER2_IP: "
+run_worker2_ssh_command "grep -q $MASTER_HOSTNAME /etc/hosts && grep -q $WORKER1_HOSTNAME /etc/hosts && grep -q $WORKER2_HOSTNAME /etc/hosts && echo OK" || { echo "FAILED"; exit 1; }
 
 echo "3. Testing SSH password authentication..."
 echo -n "  - Testing SSH password authentication: "
-for server in $MASTER_IP $WORKER1_IP $WORKER2_IP; do
-  run_ssh_command $server "echo OK" > /dev/null 2>&1 || { echo "FAILED - SSH password authentication not working for $server"; exit 1; }
-done
-echo "OK"
+run_master_ssh_command "echo OK" > /dev/null 2>&1 && run_worker1_ssh_command "echo OK" > /dev/null 2>&1 && run_worker2_ssh_command "echo OK" > /dev/null 2>&1 && echo "OK" || { echo "FAILED"; exit 1; }
 
 echo "4. Testing Cloudera Manager connectivity..."
 echo -n "  - Waiting for CM web interface (this may take a few minutes): "
@@ -48,7 +63,7 @@ done
 
 echo "5. Testing database connectivity..."
 echo -n "  - Testing MariaDB: "
-ssh $SSH_USER@$MASTER_IP "systemctl is-active mariadb" | grep -q "active" && echo "OK" || { echo "FAILED"; exit 1; }
+run_master_ssh_command "systemctl is-active mariadb" | grep -q "active" && echo "OK" || { echo "FAILED"; exit 1; }
 
 echo "6. Testing HDFS status..."
 echo -n "  - Checking HDFS service: "

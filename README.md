@@ -9,7 +9,7 @@ Automated deployment of a secure, multi-tenant Cloudera Hadoop cluster for telec
 - Isolated YARN queues per telecom client
 - Automated deployment with Ansible playbooks
 - Optimized for 3-node cluster deployment
-- Interactive server configuration with password-based authentication
+- Interactive server configuration with per-server SSH credentials
 
 ## Prerequisites
 
@@ -31,7 +31,9 @@ Automated deployment of a secure, multi-tenant Cloudera Hadoop cluster for telec
    ```bash
    bash scripts/configure-servers.sh
    ```
-   This will prompt you for server IPs, hostnames, and SSH credentials.
+   This will prompt you for:
+   - Server IPs and hostnames
+   - SSH username and password for each server individually
 
 3. Set up hostnames and /etc/hosts on all servers
    ```bash
