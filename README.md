@@ -2,6 +2,54 @@
 
 Automated deployment of a secure, multi-tenant Cloudera Hadoop cluster for telecom clients (MTN Rwanda, MTN Ghana, and Airtel Uganda) using Ansible.
 
+## Architecture
+
+```
++----------------------------------+
+|                                  |
+|  +----------------------------+  |
+|  |                            |  |
+|  |     Cloudera Manager       |  |
+|  |                            |  |
+|  +----------------------------+  |
+|                                  |
+|  +----------------------------+  |
+|  |                            |  |
+|  |  Master Node (cm-master)   |  |
+|  |  - NameNode                |  |
+|  |  - ResourceManager         |  |
+|  |  - HiveServer2             |  |
+|  |  - HiveMetastore           |  |
+|  |  - Spark History Server    |  |
+|  |                            |  |
+|  +----------------------------+  |
+|                                  |
+|  +------------+  +------------+  |
+|  |            |  |            |  |
+|  | Worker1    |  | Worker2    |  |
+|  | - DataNode |  | - DataNode |  |
+|  | - NodeMgr  |  | - NodeMgr  |  |
+|  |            |  |            |  |
+|  +------------+  +------------+  |
+|                                  |
++----------------------------------+
+
+Multi-Tenant Resource Allocation:
++----------------------------------+
+|                                  |
+| HDFS Directories:                |
+| /telecoms/mtn-rwanda             |
+| /telecoms/mtn-ghana              |
+| /telecoms/airtel-uganda          |
+|                                  |
+| YARN Queues:                     |
+| - mtn.rwanda (30%)               |
+| - mtn.ghana (30%)                |
+| - airtel.uganda (40%)            |
+|                                  |
++----------------------------------+
+```
+
 ## Features
 
 - Cloudera Manager with HDFS, YARN, Hive, and Spark
@@ -18,6 +66,29 @@ Automated deployment of a secure, multi-tenant Cloudera Hadoop cluster for telec
   - At least 8 vCPUs, 16GB RAM, and 100GB storage per server
 - Ansible installed on your local machine or jump host
 - sshpass package (will be installed automatically if needed)
+
+## Deployment Architecture
+
+The deployment creates a 3-node Hadoop cluster with the following components:
+
+1. **Master Node**:
+   - Cloudera Manager Server
+   - HDFS NameNode
+   - YARN ResourceManager
+   - Hive Metastore and HiveServer2
+   - Spark History Server
+   - MariaDB (for metadata storage)
+
+2. **Worker Nodes (2)**:
+   - HDFS DataNodes
+   - YARN NodeManagers
+
+3. **Multi-Tenant Configuration**:
+   - Separate HDFS directories for each telecom
+   - Dedicated YARN queues with resource guarantees
+   - MTN Rwanda: 30% resources
+   - MTN Ghana: 30% resources
+   - Airtel Uganda: 40% resources
 
 ## Quick Start
 
