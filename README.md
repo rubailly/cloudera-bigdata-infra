@@ -21,7 +21,7 @@ Automated deployment of a secure, multi-tenant Cloudera Hadoop cluster for telec
    ansible-playbook -i inventory/hosts.ini playbooks/deploy-services.yml
    ansible-playbook -i inventory/hosts.ini playbooks/setup-multitenancy.yml
    ```
-4. Access Cloudera Manager at http://45.90.120.29:7180
+4. Access Cloudera Manager at http://157.245.39.216:7180
 
 ## Documentation
 
