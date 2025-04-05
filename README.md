@@ -54,6 +54,10 @@ Automated deployment of a secure, multi-tenant Cloudera Hadoop cluster for telec
    - Username: admin
    - Password: Secure123!
 
+7. Multi-tenant resources will be configured as follows:
+   - HDFS directories: /telecoms/mtn-rwanda, /telecoms/mtn-ghana, /telecoms/airtel-uganda
+   - YARN queues: mtn.rwanda (30%), mtn.ghana (30%), airtel.uganda (40%)
+
 ## Customizing Your Deployment
 
 You can customize your deployment by editing:
@@ -69,6 +73,8 @@ If you encounter issues:
 - Check agent logs: `/var/log/cloudera-scm-agent/`
 - Verify all nodes can communicate with each other
 - Ensure all required ports are open
+- Check MariaDB status: `systemctl status mariadb`
+- Verify database connectivity: `mysql -u root -p`
 
 ## Documentation
 

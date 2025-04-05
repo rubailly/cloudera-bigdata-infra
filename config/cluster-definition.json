@@ -115,15 +115,15 @@
     "clusterName": "{{ cluster_name }}",
     "hosts": [
       {
-        "hostName": "cm-master",
+        "hostName": "{{ master_hostname }}",
         "hostTemplateRefName": "master"
       },
       {
-        "hostName": "worker1",
+        "hostName": "{{ worker1_hostname }}",
         "hostTemplateRefName": "worker"
       },
       {
-        "hostName": "worker2",
+        "hostName": "{{ worker2_hostname }}",
         "hostTemplateRefName": "worker"
       }
     ]
