@@ -9,14 +9,15 @@ Automated deployment of a secure, multi-tenant Cloudera Hadoop cluster for telec
 - Isolated YARN queues per telecom client
 - Automated deployment with Ansible playbooks
 - Optimized for 3-node cluster deployment
-- Configurable server IPs for flexible deployment
+- Interactive server configuration with password-based authentication
 
 ## Prerequisites
 
 - Three Ubuntu 20.04 servers with:
-  - Root SSH access to all servers
+  - SSH access to all servers
   - At least 8 vCPUs, 16GB RAM, and 100GB storage per server
 - Ansible installed on your local machine or jump host
+- sshpass package (will be installed automatically if needed)
 
 ## Quick Start
 
@@ -26,23 +27,18 @@ Automated deployment of a secure, multi-tenant Cloudera Hadoop cluster for telec
    cd cloudera-telecom-platform
    ```
 
-2. Configure your server IPs in `config/server-config.sh`
+2. Run the interactive configuration script
    ```bash
-   # Edit the server IP addresses to match your environment
-   vim config/server-config.sh
+   bash scripts/configure-servers.sh
    ```
+   This will prompt you for server IPs, hostnames, and SSH credentials.
 
-3. Generate the inventory file
-   ```bash
-   bash scripts/generate-inventory.sh
-   ```
-
-4. Set up hostnames and /etc/hosts on all servers
+3. Set up hostnames and /etc/hosts on all servers
    ```bash
    bash scripts/hosts-setup.sh
    ```
 
-5. Run the deployment playbooks in sequence:
+4. Run the deployment playbooks in sequence:
    ```bash
    ansible-playbook -i inventory/hosts.ini playbooks/setup-prereqs.yml
    ansible-playbook -i inventory/hosts.ini playbooks/install-cloudera.yml

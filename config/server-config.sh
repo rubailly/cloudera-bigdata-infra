@@ -11,5 +11,6 @@ MASTER_HOSTNAME="cm-master"
 WORKER1_HOSTNAME="worker1"
 WORKER2_HOSTNAME="worker2"
 
-# SSH user configuration
+# SSH configuration
 SSH_USER="root"
+SSH_PASSWORD="your_secure_password"
