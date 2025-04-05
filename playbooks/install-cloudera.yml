@@ -45,12 +45,18 @@
         enabled: yes
 
     - name: Secure MariaDB installation
-      command: mysql -e "ALTER USER 'root'@'localhost' IDENTIFIED BY '{{ cm_admin_password }}'; FLUSH PRIVILEGES;"
+      shell: |
+        mysql -e "UPDATE mysql.user SET Password=PASSWORD('{{ cm_admin_password }}') WHERE User='root';"
+        mysql -e "DELETE FROM mysql.user WHERE User='';"
+        mysql -e "DELETE FROM mysql.user WHERE User='root' AND Host NOT IN ('localhost', '127.0.0.1', '::1');"
+        mysql -e "DROP DATABASE IF EXISTS test;"
+        mysql -e "DELETE FROM mysql.db WHERE Db='test' OR Db='test\\_%';"
+        mysql -e "FLUSH PRIVILEGES;"
       ignore_errors: yes
 
     - name: Create databases for Cloudera services
-      command: >
-        mysql -u root -p{{ cm_admin_password }} -e "
+      shell: >
+        mysql -u root -e "
         CREATE DATABASE IF NOT EXISTS scm DEFAULT CHARACTER SET utf8 DEFAULT COLLATE utf8_general_ci;
         CREATE DATABASE IF NOT EXISTS amon DEFAULT CHARACTER SET utf8 DEFAULT COLLATE utf8_general_ci;
         CREATE DATABASE IF NOT EXISTS rman DEFAULT CHARACTER SET utf8 DEFAULT COLLATE utf8_general_ci;
@@ -123,7 +129,7 @@
       lineinfile:
         path: /etc/cloudera-scm-agent/config.ini
         regexp: '^server_host='
-        line: 'server_host=cm-master'
+        line: 'server_host={{ master_hostname }}'
         
     - name: Start Cloudera Manager Agent
       service:

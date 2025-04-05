@@ -3,6 +3,19 @@
   hosts: cloudera_manager
   become: yes
   tasks:
+    - name: Wait for HDFS to be available
+      uri:
+        url: "http://localhost:7180/api/v40/clusters/{{ cluster_name }}/services/hdfs"
+        method: GET
+        user: "{{ cm_admin_user }}"
+        password: "{{ cm_admin_password }}"
+        force_basic_auth: yes
+        status_code: 200
+      register: hdfs_result
+      until: hdfs_result.status == 200
+      retries: 60
+      delay: 10
+      
     - name: Create HDFS directories for tenants
       shell: |
         export PATH=$PATH:/opt/cloudera/parcels/CDH/bin
