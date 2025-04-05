@@ -112,7 +112,7 @@
     }
   ],
   "instantiator": {
-    "clusterName": "TelecomCluster",
+    "clusterName": "{{ cluster_name }}",
     "hosts": [
       {
         "hostName": "cm-master",

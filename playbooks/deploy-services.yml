@@ -20,15 +20,6 @@
       copy:
         src: ../config/cluster-definition.json
         dest: /tmp/cluster-definition.json
-        
-    - name: Create data directories
-      file:
-        path: "{{ item }}"
-        state: directory
-        mode: '0755'
-      with_items:
-        - /data/dfs/nn
-        - /data/dfs/dn
       
     - name: Deploy cluster using API
       uri:

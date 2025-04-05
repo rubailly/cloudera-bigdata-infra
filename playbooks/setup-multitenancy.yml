@@ -21,7 +21,7 @@
         
     - name: Configure YARN queues
       uri:
-        url: http://localhost:7180/api/v40/clusters/TelecomCluster/services/yarn/config
+        url: "http://localhost:7180/api/v40/clusters/{{ cluster_name }}/services/yarn/config"
         method: PUT
         user: "{{ cm_admin_user }}"
         password: "{{ cm_admin_password }}"
@@ -41,7 +41,7 @@
       
     - name: Deploy client configuration
       uri:
-        url: http://localhost:7180/api/v40/clusters/TelecomCluster/commands/deployClientConfig
+        url: "http://localhost:7180/api/v40/clusters/{{ cluster_name }}/commands/deployClientConfig"
         method: POST
         user: "{{ cm_admin_user }}"
         password: "{{ cm_admin_password }}"
@@ -51,7 +51,7 @@
       
     - name: Restart YARN service
       uri:
-        url: http://localhost:7180/api/v40/clusters/TelecomCluster/services/yarn/commands/restart
+        url: "http://localhost:7180/api/v40/clusters/{{ cluster_name }}/services/yarn/commands/restart"
         method: POST
         user: "{{ cm_admin_user }}"
         password: "{{ cm_admin_password }}"
