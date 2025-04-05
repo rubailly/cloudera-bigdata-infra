@@ -9,15 +9,13 @@ Automated deployment of a secure, multi-tenant Cloudera Hadoop cluster for telec
 - Isolated YARN queues per telecom client
 - Automated deployment with Ansible playbooks
 - Optimized for 3-node cluster deployment
+- Configurable server IPs for flexible deployment
 
 ## Prerequisites
 
-- Three Ubuntu 20.04 servers with the following IPs:
-  - 157.245.39.216 (will be cm-master)
-  - 38.242.250.17 (will be worker1)
-  - 45.90.120.29 (will be worker2)
-- Root SSH access to all servers
-- At least 8 vCPUs, 16GB RAM, and 100GB storage per server
+- Three Ubuntu 20.04 servers with:
+  - Root SSH access to all servers
+  - At least 8 vCPUs, 16GB RAM, and 100GB storage per server
 - Ansible installed on your local machine or jump host
 
 ## Quick Start
@@ -28,12 +26,23 @@ Automated deployment of a secure, multi-tenant Cloudera Hadoop cluster for telec
    cd cloudera-telecom-platform
    ```
 
-2. Set up hostnames and /etc/hosts on all servers
+2. Configure your server IPs in `config/server-config.sh`
+   ```bash
+   # Edit the server IP addresses to match your environment
+   vim config/server-config.sh
+   ```
+
+3. Generate the inventory file
+   ```bash
+   bash scripts/generate-inventory.sh
+   ```
+
+4. Set up hostnames and /etc/hosts on all servers
    ```bash
    bash scripts/hosts-setup.sh
    ```
 
-3. Run the deployment playbooks in sequence:
+5. Run the deployment playbooks in sequence:
    ```bash
    ansible-playbook -i inventory/hosts.ini playbooks/setup-prereqs.yml
    ansible-playbook -i inventory/hosts.ini playbooks/install-cloudera.yml
@@ -41,9 +50,17 @@ Automated deployment of a secure, multi-tenant Cloudera Hadoop cluster for telec
    ansible-playbook -i inventory/hosts.ini playbooks/setup-multitenancy.yml
    ```
 
-4. Access Cloudera Manager at http://157.245.39.216:7180
+6. Access Cloudera Manager at http://<master-ip>:7180
    - Username: admin
    - Password: Secure123!
+
+## Customizing Your Deployment
+
+You can customize your deployment by editing:
+- `config/server-config.sh` - Server IPs and hostnames
+- `inventory/group_vars/all.yml` - Cluster name, admin credentials, etc.
+- `config/yarn-queues.json` - YARN queue structure
+- `config/cluster-definition.json` - Hadoop services configuration
 
 ## Troubleshooting
 

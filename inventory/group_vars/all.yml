@@ -1,4 +1,16 @@
+# Cluster configuration
 cluster_name: TelecomCluster
 cm_admin_user: admin
 cm_admin_password: Secure123!
 java_version: openjdk-8-jdk
+
+# Server IP configuration
+# Change these values to match your server IPs
+master_ip: 157.245.39.216
+worker1_ip: 38.242.250.17
+worker2_ip: 45.90.120.29
+
+# Hostname configuration
+master_hostname: cm-master
+worker1_hostname: worker1
+worker2_hostname: worker2

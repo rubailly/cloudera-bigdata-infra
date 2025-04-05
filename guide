@@ -21,12 +21,14 @@ Isolated YARN queues per client
 Secure access policies using Apache Ranger
 
 🖥️ Server Infrastructure
-You need three Linux servers (Ubuntu 20.04 recommended). Assign static IPs like this:
+You need three Linux servers (Ubuntu 20.04 recommended) with the following roles:
 
-Server	Role	IP Address
+Server	Role	Default IP (Configurable)
 1	Cloudera Manager + Master	157.245.39.216
 2	Worker Node 1	38.242.250.17
 3	Worker Node 2	45.90.120.29
+
+To use your own servers, edit the IP addresses in config/server-config.sh
 All servers must be reachable by SSH and have at least:
 
 8 vCPUs
@@ -75,30 +77,30 @@ CM_ADMIN_USER=admin
 CM_ADMIN_PASSWORD=admin123
 SSH_PRIVATE_KEY=~/.ssh/cloudera_id_rsa
 SSH_USER=ubuntu
-Edit inventory/hosts.ini:
+Configure your server IPs:
 
-ini
+bash
 Copy
 Edit
-[cloudera_manager]
-157.245.39.216
+# Edit the server-config.sh file
+vim config/server-config.sh
 
-[master]
-157.245.39.216
-
-[workers]
-38.242.250.17
-45.90.120.29
-
-[all:vars]
-ansible_user=root
+# Generate the inventory file
+bash scripts/generate-inventory.sh
 ⚙️ Step-by-Step Deployment
-1. 🔧 Prepare SSH
+1. 🔧 Configure Servers and Prepare SSH
 From your local machine or jump host:
 
 bash
 Copy
 Edit
+# Edit server configuration if needed
+vim config/server-config.sh
+
+# Generate inventory file
+bash scripts/generate-inventory.sh
+
+# Set up hostnames and /etc/hosts
 bash scripts/hosts-setup.sh
 2. 🛠️ Run Prerequisites Setup
 bash
@@ -118,12 +120,12 @@ bash
 Copy
 Edit
 ansible-playbook -i inventory/hosts.ini playbooks/install-cloudera.yml
-Installs Cloudera Manager on 157.245.39.216
+Installs Cloudera Manager on your master node
 
 Installs agents on all nodes
 
 Access the UI at:
-http://157.245.39.216:7180
+http://<master-ip>:7180
 Login with admin / Secure123!
 
 4. 🧠 Deploy Hadoop Ecosystem

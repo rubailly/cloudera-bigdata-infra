@@ -1,16 +1,24 @@
 #!/bin/bash
 
+# Source the configuration file
+source config/server-config.sh
+
 # Set hostnames
-ssh root@157.245.39.216 "hostnamectl set-hostname cm-master"
-ssh root@38.242.250.17 "hostnamectl set-hostname worker1"
-ssh root@45.90.120.29 "hostnamectl set-hostname worker2"
+ssh root@$MASTER_IP "hostnamectl set-hostname $MASTER_HOSTNAME"
+ssh root@$WORKER1_IP "hostnamectl set-hostname $WORKER1_HOSTNAME"
+ssh root@$WORKER2_IP "hostnamectl set-hostname $WORKER2_HOSTNAME"
 
 # Update /etc/hosts on all servers
-for server in 157.245.39.216 38.242.250.17 45.90.120.29; do
+for server in $MASTER_IP $WORKER1_IP $WORKER2_IP; do
   ssh root@$server "cat > /etc/hosts << EOF
 127.0.0.1 localhost
-157.245.39.216 cm-master
-38.242.250.17 worker1
-45.90.120.29 worker2
+$MASTER_IP $MASTER_HOSTNAME
+$WORKER1_IP $WORKER1_HOSTNAME
+$WORKER2_IP $WORKER2_HOSTNAME
 EOF"
 done
+
+echo "Hostname setup completed successfully!"
+echo "Master node: $MASTER_HOSTNAME ($MASTER_IP)"
+echo "Worker node 1: $WORKER1_HOSTNAME ($WORKER1_IP)"
+echo "Worker node 2: $WORKER2_HOSTNAME ($WORKER2_IP)"
