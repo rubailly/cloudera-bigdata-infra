@@ -69,12 +69,15 @@ You can customize your deployment by editing:
 ## Troubleshooting
 
 If you encounter issues:
+- Run the deployment test script: `./deployment-test.sh`
 - Check Cloudera Manager logs: `/var/log/cloudera-scm-server/`
 - Check agent logs: `/var/log/cloudera-scm-agent/`
 - Verify all nodes can communicate with each other
 - Ensure all required ports are open
 - Check MariaDB status: `systemctl status mariadb`
 - Verify database connectivity: `mysql -u root -p`
+- Check disk space: `df -h`
+- Verify Java installation: `java -version`
 
 ## Documentation
 

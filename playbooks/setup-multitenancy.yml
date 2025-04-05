@@ -5,7 +5,7 @@
   tasks:
     - name: Wait for HDFS to be available
       uri:
-        url: "http://localhost:7180/api/v40/clusters/{{ cluster_name }}/services/hdfs"
+        url: "http://localhost:7180/api/v32/clusters/{{ cluster_name }}/services/hdfs"
         method: GET
         user: "{{ cm_admin_user }}"
         password: "{{ cm_admin_password }}"
@@ -25,7 +25,8 @@
         sudo -u hdfs hdfs dfs -chmod 770 /telecoms/mtn-rwanda
         sudo -u hdfs hdfs dfs -chmod 770 /telecoms/mtn-ghana
         sudo -u hdfs hdfs dfs -chmod 770 /telecoms/airtel-uganda
-      ignore_errors: yes
+      register: hdfs_dirs_result
+      failed_when: hdfs_dirs_result.rc != 0 and "File exists" not in hdfs_dirs_result.stderr
       
     - name: Copy YARN queue configuration
       copy:
@@ -34,7 +35,7 @@
         
     - name: Configure YARN queues
       uri:
-        url: "http://localhost:7180/api/v40/clusters/{{ cluster_name }}/services/yarn/config"
+        url: "http://localhost:7180/api/v32/clusters/{{ cluster_name }}/services/yarn/config"
         method: PUT
         user: "{{ cm_admin_user }}"
         password: "{{ cm_admin_password }}"
@@ -54,7 +55,7 @@
       
     - name: Deploy client configuration
       uri:
-        url: "http://localhost:7180/api/v40/clusters/{{ cluster_name }}/commands/deployClientConfig"
+        url: "http://localhost:7180/api/v32/clusters/{{ cluster_name }}/commands/deployClientConfig"
         method: POST
         user: "{{ cm_admin_user }}"
         password: "{{ cm_admin_password }}"
@@ -64,7 +65,7 @@
       
     - name: Restart YARN service
       uri:
-        url: "http://localhost:7180/api/v40/clusters/{{ cluster_name }}/services/yarn/commands/restart"
+        url: "http://localhost:7180/api/v32/clusters/{{ cluster_name }}/services/yarn/commands/restart"
         method: POST
         user: "{{ cm_admin_user }}"
         password: "{{ cm_admin_password }}"
@@ -74,7 +75,7 @@
       
     - name: Wait for restart to complete
       uri:
-        url: "http://localhost:7180/api/v40/commands/{{ restart_result.json.id }}"
+        url: "http://localhost:7180/api/v32/commands/{{ restart_result.json.id }}"
         method: GET
         user: "{{ cm_admin_user }}"
         password: "{{ cm_admin_password }}"

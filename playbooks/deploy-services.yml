@@ -5,7 +5,7 @@
   tasks:
     - name: Wait for Cloudera Manager to be ready
       uri:
-        url: http://localhost:7180/api/v40/tools/echo
+        url: http://localhost:7180/api/v32/tools/echo
         method: GET
         user: "{{ cm_admin_user }}"
         password: "{{ cm_admin_password }}"
@@ -23,7 +23,7 @@
       
     - name: Deploy cluster using API
       uri:
-        url: http://localhost:7180/api/v40/cm/deployment
+        url: http://localhost:7180/api/v32/cm/deployment
         method: PUT
         user: "{{ cm_admin_user }}"
         password: "{{ cm_admin_password }}"

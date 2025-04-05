@@ -46,17 +46,18 @@
 
     - name: Secure MariaDB installation
       shell: |
-        mysql -e "UPDATE mysql.user SET Password=PASSWORD('{{ cm_admin_password }}') WHERE User='root';"
-        mysql -e "DELETE FROM mysql.user WHERE User='';"
-        mysql -e "DELETE FROM mysql.user WHERE User='root' AND Host NOT IN ('localhost', '127.0.0.1', '::1');"
-        mysql -e "DROP DATABASE IF EXISTS test;"
-        mysql -e "DELETE FROM mysql.db WHERE Db='test' OR Db='test\\_%';"
-        mysql -e "FLUSH PRIVILEGES;"
-      ignore_errors: yes
+        mysql -e "ALTER USER 'root'@'localhost' IDENTIFIED BY '{{ cm_admin_password }}';"
+        mysql -u root -p"{{ cm_admin_password }}" -e "DELETE FROM mysql.user WHERE User='';"
+        mysql -u root -p"{{ cm_admin_password }}" -e "DELETE FROM mysql.user WHERE User='root' AND Host NOT IN ('localhost', '127.0.0.1', '::1');"
+        mysql -u root -p"{{ cm_admin_password }}" -e "DROP DATABASE IF EXISTS test;"
+        mysql -u root -p"{{ cm_admin_password }}" -e "DELETE FROM mysql.db WHERE Db='test' OR Db='test\\_%';"
+        mysql -u root -p"{{ cm_admin_password }}" -e "FLUSH PRIVILEGES;"
+      register: mariadb_secure
+      failed_when: mariadb_secure.rc != 0 and "Access denied" not in mariadb_secure.stderr
 
     - name: Create databases for Cloudera services
       shell: >
-        mysql -u root -e "
+        mysql -u root -p"{{ cm_admin_password }}" -e "
         CREATE DATABASE IF NOT EXISTS scm DEFAULT CHARACTER SET utf8 DEFAULT COLLATE utf8_general_ci;
         CREATE DATABASE IF NOT EXISTS amon DEFAULT CHARACTER SET utf8 DEFAULT COLLATE utf8_general_ci;
         CREATE DATABASE IF NOT EXISTS rman DEFAULT CHARACTER SET utf8 DEFAULT COLLATE utf8_general_ci;
@@ -91,6 +92,28 @@
       command: /opt/cloudera/cm/schema/scm_prepare_database.sh mysql scm scm scm
       ignore_errors: yes
 
+    - name: Generate self-signed certificate for Cloudera Manager
+      command: >
+        openssl req -new -x509 -newkey rsa:2048 -nodes
+        -keyout /opt/cloudera/security/pem/server.key
+        -out /opt/cloudera/security/pem/server.crt
+        -subj "/CN={{ master_hostname }}"
+        -days 3650
+      args:
+        creates: /opt/cloudera/security/pem/server.crt
+      
+    - name: Create directory for certificates
+      file:
+        path: /opt/cloudera/security/pem
+        state: directory
+        mode: '0755'
+        
+    - name: Configure Cloudera Manager to use TLS
+      lineinfile:
+        path: /etc/default/cloudera-scm-server
+        line: "export CMF_SERVER_TLS=true"
+        create: yes
+        
     - name: Start Cloudera Manager Server
       service:
         name: cloudera-scm-server

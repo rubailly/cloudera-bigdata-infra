@@ -52,11 +52,11 @@
           "configs": [
             {
               "name": "yarn_nodemanager_resource_memory_mb",
-              "value": "8192"
+              "value": "{{ ansible_memtotal_mb | int * 0.8 | int }}"
             },
             {
               "name": "yarn_nodemanager_resource_cpu_vcores",
-              "value": "4"
+              "value": "{{ ansible_processor_vcpus | int - 1 }}"
             }
           ]
         }
