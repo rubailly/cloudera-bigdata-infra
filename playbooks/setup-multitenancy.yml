@@ -1,0 +1,73 @@
+---
+- name: Configure Multi-Tenancy
+  hosts: cloudera_manager
+  become: yes
+  tasks:
+    - name: Create HDFS directories for tenants
+      command: >
+        kinit -kt /var/run/cloudera-scm-agent/process/*/hdfs.keytab hdfs/{{ ansible_hostname }}@HADOOP.COM && 
+        hdfs dfs -mkdir -p /telecoms/mtn-rwanda &&
+        hdfs dfs -mkdir -p /telecoms/mtn-ghana &&
+        hdfs dfs -mkdir -p /telecoms/airtel-uganda &&
+        hdfs dfs -chmod 770 /telecoms/mtn-rwanda &&
+        hdfs dfs -chmod 770 /telecoms/mtn-ghana &&
+        hdfs dfs -chmod 770 /telecoms/airtel-uganda
+      ignore_errors: yes
+      
+    - name: Copy YARN queue configuration
+      copy:
+        src: ../config/yarn-queues.json
+        dest: /tmp/yarn-queues.json
+        
+    - name: Configure YARN queues
+      uri:
+        url: http://localhost:7180/api/v40/clusters/TelecomCluster/services/yarn/config
+        method: PUT
+        user: "{{ cm_admin_user }}"
+        password: "{{ cm_admin_password }}"
+        force_basic_auth: yes
+        body_format: json
+        body: >
+          {
+            "items": [
+              {
+                "name": "yarn_scheduler_configuration",
+                "value": "{{ lookup('file', '/tmp/yarn-queues.json') }}"
+              }
+            ]
+          }
+        status_code: 200
+      register: yarn_config_result
+      
+    - name: Deploy client configuration
+      uri:
+        url: http://localhost:7180/api/v40/clusters/TelecomCluster/commands/deployClientConfig
+        method: POST
+        user: "{{ cm_admin_user }}"
+        password: "{{ cm_admin_password }}"
+        force_basic_auth: yes
+        status_code: 200
+      register: deploy_client_result
+      
+    - name: Restart YARN service
+      uri:
+        url: http://localhost:7180/api/v40/clusters/TelecomCluster/services/yarn/commands/restart
+        method: POST
+        user: "{{ cm_admin_user }}"
+        password: "{{ cm_admin_password }}"
+        force_basic_auth: yes
+        status_code: 200
+      register: restart_result
+      
+    - name: Wait for restart to complete
+      uri:
+        url: "http://localhost:7180/api/v40/commands/{{ restart_result.json.id }}"
+        method: GET
+        user: "{{ cm_admin_user }}"
+        password: "{{ cm_admin_password }}"
+        force_basic_auth: yes
+        status_code: 200
+      register: command_result
+      until: command_result.json.active == false
+      retries: 60
+      delay: 10

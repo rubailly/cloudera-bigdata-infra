@@ -1,0 +1,19 @@
+{
+  "root": {
+    "children": {
+      "mtn": {
+        "children": {
+          "rwanda": { "capacity": "30" },
+          "ghana": { "capacity": "30" }
+        },
+        "capacity": "60"
+      },
+      "airtel": {
+        "children": {
+          "uganda": { "capacity": "40" }
+        },
+        "capacity": "40"
+      }
+    }
+  }
+}

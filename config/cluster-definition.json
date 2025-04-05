@@ -1,0 +1,131 @@
+{
+  "displayName": "TelecomCluster",
+  "cmVersion": "7.4.4",
+  "products": [
+    {
+      "product": "CDH",
+      "version": "7.1.7"
+    }
+  ],
+  "services": [
+    {
+      "refName": "hdfs",
+      "serviceType": "HDFS",
+      "roleConfigGroups": [
+        {
+          "refName": "hdfs-NAMENODE-BASE",
+          "roleType": "NAMENODE",
+          "base": true,
+          "configs": [
+            {
+              "name": "dfs_name_dir_list",
+              "value": "/data/dfs/nn"
+            }
+          ]
+        },
+        {
+          "refName": "hdfs-DATANODE-BASE",
+          "roleType": "DATANODE",
+          "base": true,
+          "configs": [
+            {
+              "name": "dfs_data_dir_list",
+              "value": "/data/dfs/dn"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "refName": "yarn",
+      "serviceType": "YARN",
+      "roleConfigGroups": [
+        {
+          "refName": "yarn-RESOURCEMANAGER-BASE",
+          "roleType": "RESOURCEMANAGER",
+          "base": true
+        },
+        {
+          "refName": "yarn-NODEMANAGER-BASE",
+          "roleType": "NODEMANAGER",
+          "base": true,
+          "configs": [
+            {
+              "name": "yarn_nodemanager_resource_memory_mb",
+              "value": "8192"
+            },
+            {
+              "name": "yarn_nodemanager_resource_cpu_vcores",
+              "value": "4"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "refName": "hive",
+      "serviceType": "HIVE",
+      "roleConfigGroups": [
+        {
+          "refName": "hive-HIVESERVER2-BASE",
+          "roleType": "HIVESERVER2",
+          "base": true
+        },
+        {
+          "refName": "hive-HIVEMETASTORE-BASE",
+          "roleType": "HIVEMETASTORE",
+          "base": true
+        }
+      ]
+    },
+    {
+      "refName": "spark_on_yarn",
+      "serviceType": "SPARK_ON_YARN",
+      "roleConfigGroups": [
+        {
+          "refName": "spark_on_yarn-SPARK_YARN_HISTORY_SERVER-BASE",
+          "roleType": "SPARK_YARN_HISTORY_SERVER",
+          "base": true
+        }
+      ]
+    }
+  ],
+  "hostTemplates": [
+    {
+      "refName": "master",
+      "cardinality": 1,
+      "roleConfigGroupsRefNames": [
+        "hdfs-NAMENODE-BASE",
+        "yarn-RESOURCEMANAGER-BASE",
+        "hive-HIVEMETASTORE-BASE",
+        "hive-HIVESERVER2-BASE",
+        "spark_on_yarn-SPARK_YARN_HISTORY_SERVER-BASE"
+      ]
+    },
+    {
+      "refName": "worker",
+      "cardinality": 2,
+      "roleConfigGroupsRefNames": [
+        "hdfs-DATANODE-BASE",
+        "yarn-NODEMANAGER-BASE"
+      ]
+    }
+  ],
+  "instantiator": {
+    "clusterName": "TelecomCluster",
+    "hosts": [
+      {
+        "hostName": "cm-master",
+        "hostTemplateRefName": "master"
+      },
+      {
+        "hostName": "worker1",
+        "hostTemplateRefName": "worker"
+      },
+      {
+        "hostName": "worker2",
+        "hostTemplateRefName": "worker"
+      }
+    ]
+  }
+}

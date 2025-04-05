@@ -1,0 +1,56 @@
+---
+- name: Deploy Hadoop Services
+  hosts: cloudera_manager
+  become: yes
+  tasks:
+    - name: Wait for Cloudera Manager to be ready
+      uri:
+        url: http://localhost:7180/api/v40/tools/echo
+        method: GET
+        user: "{{ cm_admin_user }}"
+        password: "{{ cm_admin_password }}"
+        force_basic_auth: yes
+        status_code: 200
+      register: result
+      until: result.status == 200
+      retries: 60
+      delay: 10
+      
+    - name: Copy cluster definition
+      copy:
+        src: ../config/cluster-definition.json
+        dest: /tmp/cluster-definition.json
+        
+    - name: Create data directories
+      file:
+        path: "{{ item }}"
+        state: directory
+        mode: '0755'
+      with_items:
+        - /data/dfs/nn
+        - /data/dfs/dn
+      
+    - name: Deploy cluster using API
+      uri:
+        url: http://localhost:7180/api/v40/cm/deployment
+        method: PUT
+        user: "{{ cm_admin_user }}"
+        password: "{{ cm_admin_password }}"
+        force_basic_auth: yes
+        body_format: json
+        body: "{{ lookup('file', '/tmp/cluster-definition.json') }}"
+        status_code: 200,201,202
+      register: deploy_result
+      
+    - name: Wait for deployment to complete
+      uri:
+        url: "http://localhost:7180/api/v40/commands/{{ deploy_result.json.id }}"
+        method: GET
+        user: "{{ cm_admin_user }}"
+        password: "{{ cm_admin_password }}"
+        force_basic_auth: yes
+        status_code: 200
+      register: command_result
+      until: command_result.json.active == false
+      retries: 120
+      delay: 30

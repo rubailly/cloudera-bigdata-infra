@@ -1,0 +1,4 @@
+cluster_name: TelecomCluster
+cm_admin_user: admin
+cm_admin_password: Secure123!
+java_version: openjdk-8-jdk

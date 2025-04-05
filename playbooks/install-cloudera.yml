@@ -1,0 +1,123 @@
+---
+- name: Install Cloudera Manager
+  hosts: cloudera_manager
+  become: yes
+  tasks:
+    - name: Add Cloudera repository
+      get_url:
+        url: https://archive.cloudera.com/cm7/7.4.4/ubuntu2004/apt/cloudera-manager.list
+        dest: /etc/apt/sources.list.d/cloudera-manager.list
+        mode: '0644'
+      when: ansible_distribution == "Ubuntu"
+
+    - name: Add Cloudera GPG key
+      apt_key:
+        url: https://archive.cloudera.com/cm7/7.4.4/ubuntu2004/apt/archive.key
+        state: present
+      when: ansible_distribution == "Ubuntu"
+
+    - name: Update apt cache
+      apt:
+        update_cache: yes
+      when: ansible_distribution == "Ubuntu"
+
+    - name: Install Cloudera Manager Server
+      apt:
+        name:
+          - cloudera-manager-daemons
+          - cloudera-manager-agent
+          - cloudera-manager-server
+        state: present
+      when: ansible_distribution == "Ubuntu"
+
+    - name: Install MariaDB for metadata
+      apt:
+        name:
+          - mariadb-server
+          - libmariadb-dev
+        state: present
+      when: ansible_distribution == "Ubuntu"
+
+    - name: Start and enable MariaDB
+      service:
+        name: mariadb
+        state: started
+        enabled: yes
+
+    - name: Secure MariaDB installation
+      command: mysql -e "UPDATE mysql.user SET Password=PASSWORD('{{ cm_admin_password }}') WHERE User='root'; FLUSH PRIVILEGES;"
+      ignore_errors: yes
+
+    - name: Create databases for Cloudera services
+      command: >
+        mysql -u root -p{{ cm_admin_password }} -e "
+        CREATE DATABASE IF NOT EXISTS scm DEFAULT CHARACTER SET utf8 DEFAULT COLLATE utf8_general_ci;
+        CREATE DATABASE IF NOT EXISTS amon DEFAULT CHARACTER SET utf8 DEFAULT COLLATE utf8_general_ci;
+        CREATE DATABASE IF NOT EXISTS rman DEFAULT CHARACTER SET utf8 DEFAULT COLLATE utf8_general_ci;
+        CREATE DATABASE IF NOT EXISTS hue DEFAULT CHARACTER SET utf8 DEFAULT COLLATE utf8_general_ci;
+        CREATE DATABASE IF NOT EXISTS metastore DEFAULT CHARACTER SET utf8 DEFAULT COLLATE utf8_general_ci;
+        CREATE DATABASE IF NOT EXISTS sentry DEFAULT CHARACTER SET utf8 DEFAULT COLLATE utf8_general_ci;
+        CREATE DATABASE IF NOT EXISTS nav DEFAULT CHARACTER SET utf8 DEFAULT COLLATE utf8_general_ci;
+        CREATE DATABASE IF NOT EXISTS navms DEFAULT CHARACTER SET utf8 DEFAULT COLLATE utf8_general_ci;
+        CREATE DATABASE IF NOT EXISTS oozie DEFAULT CHARACTER SET utf8 DEFAULT COLLATE utf8_general_ci;
+        GRANT ALL ON scm.* TO 'scm'@'%' IDENTIFIED BY 'scm';
+        GRANT ALL ON amon.* TO 'amon'@'%' IDENTIFIED BY 'amon';
+        GRANT ALL ON rman.* TO 'rman'@'%' IDENTIFIED BY 'rman';
+        GRANT ALL ON hue.* TO 'hue'@'%' IDENTIFIED BY 'hue';
+        GRANT ALL ON metastore.* TO 'hive'@'%' IDENTIFIED BY 'hive';
+        GRANT ALL ON sentry.* TO 'sentry'@'%' IDENTIFIED BY 'sentry';
+        GRANT ALL ON nav.* TO 'nav'@'%' IDENTIFIED BY 'nav';
+        GRANT ALL ON navms.* TO 'navms'@'%' IDENTIFIED BY 'navms';
+        GRANT ALL ON oozie.* TO 'oozie'@'%' IDENTIFIED BY 'oozie';
+        FLUSH PRIVILEGES;"
+      ignore_errors: yes
+
+    - name: Initialize Cloudera SCM database
+      command: /opt/cloudera/cm/schema/scm_prepare_database.sh mysql scm scm scm
+      ignore_errors: yes
+
+    - name: Start Cloudera Manager Server
+      service:
+        name: cloudera-scm-server
+        state: started
+        enabled: yes
+
+- name: Install Cloudera Agents on all nodes
+  hosts: all
+  become: yes
+  tasks:
+    - name: Add Cloudera repository
+      get_url:
+        url: https://archive.cloudera.com/cm7/7.4.4/ubuntu2004/apt/cloudera-manager.list
+        dest: /etc/apt/sources.list.d/cloudera-manager.list
+        mode: '0644'
+      when: ansible_distribution == "Ubuntu"
+
+    - name: Add Cloudera GPG key
+      apt_key:
+        url: https://archive.cloudera.com/cm7/7.4.4/ubuntu2004/apt/archive.key
+        state: present
+      when: ansible_distribution == "Ubuntu"
+
+    - name: Update apt cache
+      apt:
+        update_cache: yes
+      when: ansible_distribution == "Ubuntu"
+
+    - name: Install Cloudera Manager Agent
+      apt:
+        name: cloudera-manager-agent
+        state: present
+      when: ansible_distribution == "Ubuntu"
+
+    - name: Configure CM agent to point to CM server
+      lineinfile:
+        path: /etc/cloudera-scm-agent/config.ini
+        regexp: '^server_host='
+        line: 'server_host=cm-master'
+        
+    - name: Start Cloudera Manager Agent
+      service:
+        name: cloudera-scm-agent
+        state: started
+        enabled: yes
